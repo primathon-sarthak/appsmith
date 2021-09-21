@@ -151,7 +151,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
           },
           {
             helpText: "Changes the country code",
-            propertyName: "phoneNumberCountryCode",
+            propertyName: "countryCode",
             label: "Default Country Code",
             enableSearch: true,
             dropdownHeight: "195px",
@@ -606,12 +606,9 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
   onISDCodeChange = (code?: string) => {
     const countryCode = code;
     if (this.props.renderMode === RenderModes.CANVAS) {
-      super.updateWidgetProperty("phoneNumberCountryCode", countryCode);
+      super.updateWidgetProperty("countryCode", countryCode);
     } else {
-      this.props.updateWidgetMetaProperty(
-        "selectedPhoneNumberCountryCode",
-        countryCode,
-      );
+      this.props.updateWidgetMetaProperty("selectedcountryCode", countryCode);
     }
   };
 
@@ -669,9 +666,9 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
     const currencyCountryCode = this.props.selectedCurrencyCountryCode
       ? this.props.selectedCurrencyCountryCode
       : this.props.currencyCountryCode;
-    const phoneNumberCountryCode = this.props.selectedPhoneNumberCountryCode
-      ? this.props.selectedPhoneNumberCountryCode
-      : this.props.phoneNumberCountryCode;
+    const countryCode = this.props.selectedcountryCode
+      ? this.props.selectedcountryCode
+      : this.props.countryCode;
     const conditionalProps: Partial<InputComponentProps> = {};
     conditionalProps.errorMessage = this.props.errorMessage;
     if (this.props.isRequired && value.length === 0) {
@@ -711,6 +708,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
               1 && this.props.inputType === "TEXT"
           )
         }
+        countryCode={countryCode}
         currencyCountryCode={currencyCountryCode}
         decimalsInCurrency={this.props.decimalsInCurrency}
         defaultValue={this.props.defaultText}
@@ -735,7 +733,6 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
         onISDCodeChange={this.onISDCodeChange}
         onKeyDown={this.handleKeyDown}
         onValueChange={this.onValueChange}
-        phoneNumberCountryCode={phoneNumberCountryCode}
         placeholder={this.props.placeholderText}
         showError={!!this.props.isFocused}
         stepSize={1}
@@ -761,7 +758,7 @@ export interface InputWidgetProps extends WidgetProps {
   currencyCountryCode?: string;
   noOfDecimals?: number;
   allowCurrencyChange?: boolean;
-  phoneNumberCountryCode?: string;
+  countryCode?: string;
   decimalsInCurrency?: number;
   defaultText?: string | number;
   tooltip?: string;
