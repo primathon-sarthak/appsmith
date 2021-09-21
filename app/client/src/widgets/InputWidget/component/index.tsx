@@ -292,9 +292,7 @@ class InputComponent extends React.Component<
 
   getLeftIcon = (inputType: InputType, disabled: boolean) => {
     if (inputType === InputTypes.PHONE_NUMBER) {
-      const selectedISDCode = getSelectedISDCode(
-        this.props.phoneNumberCountryCode,
-      );
+      const selectedISDCode = getSelectedISDCode(this.props.countryCode);
       return (
         <ISDCodeDropdown
           disabled={disabled}
@@ -548,7 +546,7 @@ export interface InputComponentProps extends ComponentProps {
   defaultValue?: string | number;
   currencyCountryCode?: string;
   noOfDecimals?: number;
-  phoneNumberCountryCode?: string;
+  countryCode?: string;
   allowCurrencyChange?: boolean;
   decimalsInCurrency?: number;
   label: string;
