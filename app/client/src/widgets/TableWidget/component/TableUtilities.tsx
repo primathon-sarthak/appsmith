@@ -48,6 +48,7 @@ import {
 import { StyledButton } from "widgets/IconButtonWidget/component";
 import MenuButtonTableComponent from "./components/menuButtonTableComponent";
 import { stopClickEventPropagation } from "utils/helpers";
+import { getFormatedValue } from "utils/NumberFormatingUtil";
 
 export const renderCell = (
   value: any,
@@ -172,6 +173,28 @@ export const renderCell = (
         </AutoToolTipComponent>
       );
   }
+};
+
+export const renderFormatedNumber = (
+  value: any,
+  format: string,
+  columnType: string,
+  isHidden: boolean,
+  cellProperties: CellLayoutProperties,
+  tableWidth: number,
+) => {
+  return (
+    <AutoToolTipComponent
+      cellProperties={cellProperties}
+      columnType={columnType}
+      isCellVisible
+      isHidden={isHidden}
+      tableWidth={tableWidth}
+      title={!!value ? value.toString() : ""}
+    >
+      {!!value ? getFormatedValue(format, value.toString()) : ""}
+    </AutoToolTipComponent>
+  );
 };
 
 interface RenderIconButtonProps {

@@ -111,6 +111,85 @@ export default [
                   isTriggerProperty: false,
                 },
                 {
+                  propertyName: "format",
+                  label: "Format Number",
+                  controlType: "DROP_DOWN",
+                  options: [
+                    {
+                      label: "0",
+                      value: "0",
+                      subText: "1235",
+                    },
+                    {
+                      label: "0.00",
+                      value: "0.00",
+                      subText: "1235.56",
+                    },
+                    {
+                      label: "#,##0",
+                      value: "#,##0",
+                      subText: "1,235",
+                    },
+                    {
+                      label: "#,##0.00",
+                      value: "#,##0.00",
+                      subText: "1,235.56",
+                    },
+                    {
+                      label: "#,##0_);(#,##0)",
+                      value: "#,##0_);(#,##0)",
+                      subText: "1,235",
+                    },
+                    {
+                      label: "#,##0.00_);(#,##0.00)",
+                      value: "#,##0.00_);(#,##0.00)",
+                      subText: "1,235.56",
+                    },
+                    {
+                      label: "$#,##0_);($#,##0)",
+                      value: "$#,##0_);($#,##0)",
+                      subText: "$1,235",
+                    },
+                    {
+                      label: "@",
+                      value: "@",
+                      subText: "1235.56",
+                    },
+                    {
+                      label: "0%",
+                      value: "0%",
+                      subText: "123556%",
+                    },
+                    {
+                      label: "0.00%",
+                      value: "0.00%",
+                      subText: "123556.00%",
+                    },
+                    {
+                      label: "0.00E+0",
+                      value: "0.00E+0",
+                      subText: "1.23E+3",
+                    },
+                    {
+                      label: "# ?/?",
+                      value: "# ?/?",
+                      subText: "1234 5/9",
+                    },
+                  ],
+                  hidden: (props: TableWidgetProps, propertyPath: string) => {
+                    return hideByColumnType(props, propertyPath, [
+                      ColumnTypes.NUMBER,
+                    ]);
+                  },
+                  dependencies: [
+                    "primaryColumns",
+                    "derivedColumns",
+                    "columnOrder",
+                  ],
+                  isBindProperty: false,
+                  isTriggerProperty: false,
+                },
+                {
                   propertyName: "displayText",
                   label: "Display Text",
                   controlType: "COMPUTE_VALUE",

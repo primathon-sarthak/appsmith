@@ -24,6 +24,7 @@ import {
   renderMenuButton,
   RenderMenuButtonProps,
   renderIconButton,
+  renderFormatedNumber,
 } from "../component/TableUtilities";
 import { getAllTableColumnKeys } from "../component/TableHelpers";
 import Skeleton from "components/utils/Skeleton";
@@ -237,9 +238,17 @@ class TableWidget extends BaseWidget<TableWidgetProps, WidgetState> {
               isCellVisible: cellProperties.isCellVisible ?? true,
             };
             return renderIconButton(iconButtonProps, isHidden, cellProperties);
+          } else if (columnProperties.columnType === "number") {
+            return renderFormatedNumber(
+              props.cell.value,
+              columnProperties.format,
+              columnProperties.columnType,
+              isHidden,
+              cellProperties,
+              componentWidth,
+            );
           } else {
             const isCellVisible = cellProperties.isCellVisible ?? true;
-
             return renderCell(
               props.cell.value,
               columnProperties.columnType,
