@@ -1,6 +1,6 @@
 export const deformatValue = (format: string, value: string) => {
   if (value) {
-    let VALUE = value;
+    let VALUE = value.replace(/,/g, "");
     switch (format) {
       case "0%":
         VALUE = "" + +VALUE.replace(/[^0-9\.]+/g, "") / 100;
@@ -9,9 +9,9 @@ export const deformatValue = (format: string, value: string) => {
         VALUE = "" + +VALUE.replace(/[^0-9\.]+/g, "") / 100;
         break;
       default:
-        VALUE = value.replace(/,/g, "");
         if (isNaN(parseFloat(VALUE))) {
-          VALUE = "-" + VALUE.replace(/[^0-9\.]+/g, "");
+          if (VALUE[0] === "$") VALUE = VALUE.replace(/[^0-9\.]+/g, "");
+          else VALUE = "-" + VALUE.replace(/[^0-9\.]+/g, "");
         }
         break;
     }
