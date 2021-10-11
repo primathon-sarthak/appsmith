@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { MenuItem, Classes, Button as BButton } from "@blueprintjs/core";
+import {
+  MenuItem,
+  Classes,
+  Button as BButton,
+  Alignment,
+} from "@blueprintjs/core";
 import {
   CellWrapper,
   CellCheckboxWrapper,
@@ -17,6 +22,7 @@ import {
   ColumnProperties,
   CellLayoutProperties,
   TableStyles,
+  MenuItems,
 } from "./Constants";
 import { isString, isEmpty, findIndex } from "lodash";
 import PopoverVideo from "widgets/VideoWidget/component/PopoverVideo";
@@ -33,7 +39,6 @@ import { FontStyleTypes, TextSizes } from "constants/WidgetConstants";
 import { noop } from "utils/AppsmithUtils";
 
 import {
-  ButtonStyleType,
   ButtonVariant,
   ButtonBoxShadow,
   ButtonBorderRadius,
@@ -41,6 +46,9 @@ import {
 
 //TODO(abstraction leak)
 import { StyledButton } from "widgets/IconButtonWidget/component";
+import MenuButtonTableComponent from "./components/menuButtonTableComponent";
+import { stopClickEventPropagation } from "utils/helpers";
+import { getFormatedValue } from "utils/NumberFormatingUtil";
 
 export const renderCell = (
   value: any,
@@ -167,12 +175,34 @@ export const renderCell = (
   }
 };
 
+export const renderFormatedNumber = (
+  value: any,
+  format: string,
+  columnType: string,
+  isHidden: boolean,
+  cellProperties: CellLayoutProperties,
+  tableWidth: number,
+) => {
+  return (
+    <AutoToolTipComponent
+      cellProperties={cellProperties}
+      columnType={columnType}
+      isCellVisible
+      isHidden={isHidden}
+      tableWidth={tableWidth}
+      title={!!value ? value.toString() : ""}
+    >
+      {!!value ? getFormatedValue(format, value.toString()) : ""}
+    </AutoToolTipComponent>
+  );
+};
+
 interface RenderIconButtonProps {
   isSelected: boolean;
   columnActions?: ColumnAction[];
   iconName?: IconName;
   buttonVariant: ButtonVariant;
-  buttonStyle: ButtonStyleType;
+  buttonColor: string;
   borderRadius: ButtonBorderRadius;
   boxShadow: ButtonBoxShadow;
   boxShadowColor: string;
@@ -200,7 +230,7 @@ export const renderIconButton = (
             borderRadius={props.borderRadius}
             boxShadow={props.boxShadow}
             boxShadowColor={props.boxShadowColor}
-            buttonStyle={props.buttonStyle}
+            buttonColor={props.buttonColor}
             buttonVariant={props.buttonVariant}
             iconName={props.iconName}
             isSelected={props.isSelected}
@@ -217,7 +247,7 @@ function IconButton(props: {
   onCommandClick: (dynamicTrigger: string, onComplete: () => void) => void;
   isSelected: boolean;
   action: ColumnAction;
-  buttonStyle: ButtonStyleType;
+  buttonColor: string;
   buttonVariant: ButtonVariant;
   borderRadius: ButtonBorderRadius;
   boxShadow: ButtonBoxShadow;
@@ -246,7 +276,7 @@ function IconButton(props: {
         borderRadius={props.borderRadius}
         boxShadow={props.boxShadow}
         boxShadowColor={props.boxShadowColor}
-        buttonStyle={props.buttonStyle}
+        buttonColor={props.buttonColor}
         buttonVariant={props.buttonVariant}
         icon={props.iconName}
         loading={loading}
@@ -264,6 +294,23 @@ interface RenderActionProps {
   isDisabled: boolean;
   isCellVisible: boolean;
   onCommandClick: (dynamicTrigger: string, onComplete: () => void) => void;
+}
+export interface RenderMenuButtonProps {
+  isSelected: boolean;
+  // columnActions?: ColumnAction[];
+  label: string;
+  isDisabled: boolean;
+  isCellVisible: boolean;
+  onCommandClick: (dynamicTrigger: string, onComplete?: () => void) => void;
+  isCompact?: boolean;
+  menuItems: MenuItems;
+  menuVariant?: ButtonVariant;
+  menuColor?: string;
+  borderRadius?: ButtonBorderRadius;
+  boxShadow?: ButtonBoxShadow;
+  boxShadowColor?: string;
+  iconName?: IconName;
+  iconAlign?: Alignment;
 }
 
 export const renderActions = (
@@ -303,6 +350,73 @@ export const renderActions = (
     </CellWrapper>
   );
 };
+
+export const renderMenuButton = (
+  props: RenderMenuButtonProps,
+  isHidden: boolean,
+  cellProperties: CellLayoutProperties,
+) => {
+  return (
+    <CellWrapper
+      cellProperties={cellProperties}
+      isCellVisible={props.isCellVisible}
+      isHidden={isHidden}
+    >
+      <MenuButton {...props} />
+    </CellWrapper>
+  );
+};
+
+interface MenuButtonProps extends Omit<RenderMenuButtonProps, "columnActions"> {
+  action?: ColumnAction;
+}
+function MenuButton({
+  borderRadius,
+  boxShadow,
+  boxShadowColor,
+  iconAlign,
+  iconName,
+  isCompact,
+  isDisabled,
+  isSelected,
+  label,
+  menuColor,
+  menuItems,
+  menuVariant,
+  onCommandClick,
+}: MenuButtonProps): JSX.Element {
+  const handlePropagation = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    if (isSelected) {
+      e.stopPropagation();
+    }
+  };
+  const onItemClicked = (onClick?: string) => {
+    if (onClick) {
+      onCommandClick(onClick);
+    }
+  };
+
+  return (
+    <div onClick={handlePropagation}>
+      <MenuButtonTableComponent
+        borderRadius={borderRadius}
+        boxShadow={boxShadow}
+        boxShadowColor={boxShadowColor}
+        iconAlign={iconAlign}
+        iconName={iconName}
+        isCompact={isCompact}
+        isDisabled={isDisabled}
+        label={label}
+        menuColor={menuColor}
+        menuItems={{ ...menuItems }}
+        menuVariant={menuVariant}
+        onItemClicked={onItemClicked}
+      />
+    </div>
+  );
+}
 
 function TableAction(props: {
   isSelected: boolean;
@@ -678,12 +792,7 @@ export const renderDropdown = (props: {
     );
   };
   return (
-    <div
-      onClick={(e: React.MouseEvent<HTMLElement>) => {
-        e.stopPropagation();
-      }}
-      style={{ height: "100%" }}
-    >
+    <div onClick={stopClickEventPropagation} style={{ height: "100%" }}>
       <StyledSingleDropDown
         filterable={false}
         itemRenderer={renderSingleSelectItem}

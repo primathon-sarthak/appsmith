@@ -23,9 +23,10 @@ import { GRID_DENSITY_MIGRATION_V1 } from "widgets/constants";
 import { ISDCodeDropdownOptions } from "../component/ISDCodeDropdown";
 import { CurrencyDropdownOptions } from "../component/CurrencyCodeDropdown";
 import { AutocompleteDataType } from "utils/autocomplete/TernServer";
+import { deformatValue, getFormatedValue } from "utils/NumberFormatingUtil";
 
-function defaultValueValidation(
-  value: unknown,
+export function defaultValueValidation(
+  value: any,
   props: InputWidgetProps,
   _?: any,
 ): ValidationResponse {
@@ -36,31 +37,37 @@ function defaultValueValidation(
     inputType === "CURRENCY" ||
     inputType === "PHONE_NUMBER"
   ) {
-    if (_.isNil(value) || value === "") {
-      return {
-        isValid: true,
-        parsed: 0,
-        message: "",
-      };
+    const parsed = Number(value);
+
+    if (typeof value === "string") {
+      if (value.trim() === "") {
+        return {
+          isValid: true,
+          parsed: undefined,
+          messages: [""],
+        };
+      }
+
+      if (!Number.isFinite(parsed)) {
+        return {
+          isValid: false,
+          parsed: undefined,
+          messages: ["This value must be a number"],
+        };
+      }
     }
-    if (!Number.isFinite(value) && !_.isString(value)) {
-      return {
-        isValid: false,
-        parsed: 0,
-        message: "This value must be a number",
-      };
-    }
+
     return {
       isValid: true,
-      parsed: Number(value),
-      message: "",
+      parsed,
+      messages: [""],
     };
   }
   if (_.isObject(value)) {
     return {
       isValid: false,
       parsed: JSON.stringify(value, null, 2),
-      message: "This value must be string",
+      messages: ["This value must be string"],
     };
   }
   let parsed = value;
@@ -72,14 +79,14 @@ function defaultValueValidation(
       return {
         isValid: false,
         parsed: "",
-        message: "This value must be string",
+        messages: ["This value must be string"],
       };
     }
   }
   return {
     isValid,
     parsed: parsed,
-    message: "",
+    messages: [""],
   };
 }
 
@@ -130,6 +137,79 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             isTriggerProperty: false,
           },
           {
+            propertyName: "format",
+            label: "Format Number",
+            controlType: "DROP_DOWN",
+            options: [
+              {
+                label: "0",
+                value: "0",
+                subText: "1235",
+              },
+              {
+                label: "0.00",
+                value: "0.00",
+                subText: "1235.56",
+              },
+              {
+                label: "#,##0",
+                value: "#,##0",
+                subText: "1,235",
+              },
+              {
+                label: "#,##0.00",
+                value: "#,##0.00",
+                subText: "1,235.56",
+              },
+              {
+                label: "#,##0_);(#,##0)",
+                value: "#,##0_);(#,##0)",
+                subText: "1,235",
+              },
+              {
+                label: "#,##0.00_);(#,##0.00)",
+                value: "#,##0.00_);(#,##0.00)",
+                subText: "1,235.56",
+              },
+              {
+                label: "$#,##0_);($#,##0)",
+                value: "$#,##0_);($#,##0)",
+                subText: "$1,235",
+              },
+              {
+                label: "@",
+                value: "@",
+                subText: "1235.56",
+              },
+              {
+                label: "0%",
+                value: "0%",
+                subText: "123556%",
+              },
+              {
+                label: "0.00%",
+                value: "0.00%",
+                subText: "123556.00%",
+              },
+              {
+                label: "0.00E+0",
+                value: "0.00E+0",
+                subText: "1.23E+3",
+              },
+              {
+                label: "# ?/?",
+                value: "# ?/?",
+                subText: "1234 5/9",
+              },
+            ],
+            hidden: (props: InputWidgetProps) => {
+              return props.inputType !== InputTypes.NUMBER;
+            },
+            dependencies: ["inputType"],
+            isBindProperty: false,
+            isTriggerProperty: false,
+          },
+          {
             propertyName: "allowCurrencyChange",
             label: "Allow currency change",
             helpText: "Search by currency or country",
@@ -145,7 +225,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
           },
           {
             helpText: "Changes the country code",
-            propertyName: "phoneNumberCountryCode",
+            propertyName: "countryCode",
             label: "Default Country Code",
             enableSearch: true,
             dropdownHeight: "195px",
@@ -202,7 +282,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             propertyName: "maxChars",
             label: "Max Chars",
             controlType: "INPUT_TEXT",
-            placeholderText: "Enter max allowed characters",
+            placeholderText: "255",
             isBindProperty: true,
             isTriggerProperty: false,
             validation: { type: ValidationTypes.NUMBER },
@@ -217,7 +297,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             propertyName: "defaultText",
             label: "Default Text",
             controlType: "INPUT_TEXT",
-            placeholderText: "Enter default text",
+            placeholderText: "John Doe",
             isBindProperty: true,
             isTriggerProperty: false,
             validation: {
@@ -226,42 +306,12 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
                 fn: defaultValueValidation,
                 expected: {
                   type: "string or number",
-                  example: `value1 | 123`,
+                  example: `John | 123`,
                   autocompleteDataType: AutocompleteDataType.STRING,
                 },
               },
             },
             dependencies: ["inputType"],
-          },
-          {
-            helpText: "Sets a placeholder text for the input",
-            propertyName: "placeholderText",
-            label: "Placeholder",
-            controlType: "INPUT_TEXT",
-            placeholderText: "Enter placeholder text",
-            isBindProperty: true,
-            isTriggerProperty: false,
-            validation: { type: ValidationTypes.TEXT },
-          },
-          {
-            helpText: "Sets the label text of the widget",
-            propertyName: "label",
-            label: "Label",
-            controlType: "INPUT_TEXT",
-            placeholderText: "Enter label text",
-            isBindProperty: true,
-            isTriggerProperty: false,
-            validation: { type: ValidationTypes.TEXT },
-          },
-          {
-            helpText: "Show help text or details about current input",
-            propertyName: "tooltip",
-            label: "Tooltip",
-            controlType: "INPUT_TEXT",
-            placeholderText: "Enter tooltip text",
-            isBindProperty: true,
-            isTriggerProperty: false,
-            validation: { type: ValidationTypes.TEXT },
           },
           {
             helpText:
@@ -276,12 +326,11 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             validation: { type: ValidationTypes.REGEX },
           },
           {
-            helpText:
-              "Ability to control input validity based on a JS expression",
+            helpText: "Sets the input validity based on a JS expression",
             propertyName: "validation",
             label: "Valid",
             controlType: "INPUT_TEXT",
-            placeholderText: "Enter input validation expression",
+            placeholderText: "{{ Input1.text.length > 0 }}",
             inputType: "TEXT",
             isBindProperty: true,
             isTriggerProperty: false,
@@ -289,25 +338,45 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
           },
           {
             helpText:
-              "Displays the error message if the regex validation fails",
+              "The error message to display if the regex or valid property check fails",
             propertyName: "errorMessage",
             label: "Error Message",
             controlType: "INPUT_TEXT",
-            placeholderText: "Enter error message",
+            placeholderText: "Not a valid email!",
             inputType: "TEXT",
             isBindProperty: true,
             isTriggerProperty: false,
             validation: { type: ValidationTypes.TEXT },
           },
           {
-            helpText: "Focus input automatically on load",
-            propertyName: "autoFocus",
-            label: "Auto Focus",
-            controlType: "SWITCH",
-            isJSConvertible: true,
+            helpText: "Sets a placeholder text for the input",
+            propertyName: "placeholderText",
+            label: "Placeholder",
+            controlType: "INPUT_TEXT",
+            placeholderText: "Placeholder",
             isBindProperty: true,
             isTriggerProperty: false,
-            validation: { type: ValidationTypes.BOOLEAN },
+            validation: { type: ValidationTypes.TEXT },
+          },
+          {
+            helpText: "Sets the label text of the widget",
+            propertyName: "label",
+            label: "Label",
+            controlType: "INPUT_TEXT",
+            placeholderText: "Name:",
+            isBindProperty: true,
+            isTriggerProperty: false,
+            validation: { type: ValidationTypes.TEXT },
+          },
+          {
+            helpText: "Show help text or details about current input",
+            propertyName: "tooltip",
+            label: "Tooltip",
+            controlType: "INPUT_TEXT",
+            placeholderText: "Passwords must be atleast 6 chars",
+            isBindProperty: true,
+            isTriggerProperty: false,
+            validation: { type: ValidationTypes.TEXT },
           },
           {
             propertyName: "isRequired",
@@ -349,14 +418,48 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             isTriggerProperty: false,
             validation: { type: ValidationTypes.BOOLEAN },
           },
+          {
+            helpText: "Focus input automatically on load",
+            propertyName: "autoFocus",
+            label: "Auto Focus",
+            controlType: "SWITCH",
+            isJSConvertible: true,
+            isBindProperty: true,
+            isTriggerProperty: false,
+            validation: { type: ValidationTypes.BOOLEAN },
+          },
         ],
       },
       {
-        sectionName: "Styles",
+        sectionName: "Actions",
+        children: [
+          {
+            helpText: "Triggers an action when the text is changed",
+            propertyName: "onTextChanged",
+            label: "onTextChanged",
+            controlType: "ACTION_SELECTOR",
+            isJSConvertible: true,
+            isBindProperty: true,
+            isTriggerProperty: true,
+          },
+          {
+            helpText:
+              "Triggers an action on submit (when the enter key is pressed)",
+            propertyName: "onSubmit",
+            label: "onSubmit",
+            controlType: "ACTION_SELECTOR",
+            isJSConvertible: true,
+            isBindProperty: true,
+            isTriggerProperty: true,
+          },
+        ],
+      },
+      {
+        sectionName: "Label Styles",
         children: [
           {
             propertyName: "labelTextColor",
-            label: "Label Text Color",
+            label: "Text Color",
             controlType: "COLOR_PICKER",
             isJSConvertible: true,
             isBindProperty: true,
@@ -370,7 +473,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
           },
           {
             propertyName: "labelTextSize",
-            label: "Label Text Size",
+            label: "Text Size",
             controlType: "DROP_DOWN",
             options: [
               {
@@ -458,30 +561,6 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
           },
         ],
       },
-      {
-        sectionName: "Actions",
-        children: [
-          {
-            helpText: "Triggers an action when the text is changed",
-            propertyName: "onTextChanged",
-            label: "onTextChanged",
-            controlType: "ACTION_SELECTOR",
-            isJSConvertible: true,
-            isBindProperty: true,
-            isTriggerProperty: true,
-          },
-          {
-            helpText:
-              "Triggers an action on submit (when the enter key is pressed)",
-            propertyName: "onSubmit",
-            label: "onSubmit",
-            controlType: "ACTION_SELECTOR",
-            isJSConvertible: true,
-            isBindProperty: true,
-            isTriggerProperty: true,
-          },
-        ],
-      },
     ];
   }
 
@@ -489,6 +568,12 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
     return {
       isValid: `{{
         function(){
+          if (!this.isRequired && !this.text) {
+            return true
+          }
+          if(this.isRequired && !this.text){
+            return false
+          }
           if (typeof this.validation === "boolean" && !this.validation) {
             return false;
           }
@@ -545,7 +630,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
             } else {
               return false;
             }
-          } 
+          }
           if (parsedRegex) {
             return parsedRegex.test(this.text)
           } else {
@@ -601,12 +686,9 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
   onISDCodeChange = (code?: string) => {
     const countryCode = code;
     if (this.props.renderMode === RenderModes.CANVAS) {
-      super.updateWidgetProperty("phoneNumberCountryCode", countryCode);
+      super.updateWidgetProperty("countryCode", countryCode);
     } else {
-      this.props.updateWidgetMetaProperty(
-        "selectedPhoneNumberCountryCode",
-        countryCode,
-      );
+      this.props.updateWidgetMetaProperty("selectedcountryCode", countryCode);
     }
   };
 
@@ -624,6 +706,11 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
      */
     this.props.updateWidgetMetaProperty("dragDisabled", focusState);
     this.props.updateWidgetMetaProperty("isFocused", focusState);
+    if (focusState) {
+      this.onValueChange(deformatValue(this.props.format, this.props.text));
+    } else {
+      this.onValueChange(getFormatedValue(this.props.format, this.props.text));
+    }
   };
 
   onSubmitSuccess = (result: ExecutionResult) => {
@@ -658,21 +745,22 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
   };
 
   getPageView() {
-    const value = this.props.text || "";
+    const value = this.props.text ?? "";
     let isInvalid =
       "isValid" in this.props && !this.props.isValid && !!this.props.isDirty;
     const currencyCountryCode = this.props.selectedCurrencyCountryCode
       ? this.props.selectedCurrencyCountryCode
       : this.props.currencyCountryCode;
-    const phoneNumberCountryCode = this.props.selectedPhoneNumberCountryCode
-      ? this.props.selectedPhoneNumberCountryCode
-      : this.props.phoneNumberCountryCode;
+    const countryCode = this.props.selectedcountryCode
+      ? this.props.selectedcountryCode
+      : this.props.countryCode;
     const conditionalProps: Partial<InputComponentProps> = {};
     conditionalProps.errorMessage = this.props.errorMessage;
     if (this.props.isRequired && value.length === 0) {
       conditionalProps.errorMessage = createMessage(FIELD_REQUIRED_ERROR);
     }
-    if (this.props.maxChars) {
+    if (this.props.inputType === "TEXT" && this.props.maxChars) {
+      // pass maxChars only for Text type inputs, undefined for other types
       conditionalProps.maxChars = this.props.maxChars;
       if (
         this.props.defaultText &&
@@ -705,6 +793,7 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
               1 && this.props.inputType === "TEXT"
           )
         }
+        countryCode={countryCode}
         currencyCountryCode={currencyCountryCode}
         decimalsInCurrency={this.props.decimalsInCurrency}
         defaultValue={this.props.defaultText}
@@ -729,7 +818,6 @@ class InputWidget extends BaseWidget<InputWidgetProps, WidgetState> {
         onISDCodeChange={this.onISDCodeChange}
         onKeyDown={this.handleKeyDown}
         onValueChange={this.onValueChange}
-        phoneNumberCountryCode={phoneNumberCountryCode}
         placeholder={this.props.placeholderText}
         showError={!!this.props.isFocused}
         stepSize={1}
@@ -755,7 +843,7 @@ export interface InputWidgetProps extends WidgetProps {
   currencyCountryCode?: string;
   noOfDecimals?: number;
   allowCurrencyChange?: boolean;
-  phoneNumberCountryCode?: string;
+  countryCode?: string;
   decimalsInCurrency?: number;
   defaultText?: string | number;
   tooltip?: string;
